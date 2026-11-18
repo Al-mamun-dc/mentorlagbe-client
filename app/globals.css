@@ -47,6 +47,50 @@
     --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+@theme {
+    /* MentorLagbe brand scale — canonical accent #FF2D83 (hot pink) */
+    --color-brand-50: oklch(0.971 0.02 5);
+    --color-brand-100: oklch(0.941 0.04 5);
+    --color-brand-200: oklch(0.899 0.08 5);
+    --color-brand-300: oklch(0.81 0.12 5);
+    --color-brand-400: oklch(0.73 0.16 5);
+    --color-brand-500: #ff2d83;
+    --color-brand-600: oklch(0.58 0.15 5);
+    --color-brand-700: oklch(0.5 0.14 5);
+    --color-brand-800: oklch(0.43 0.12 5);
+    --color-brand-900: oklch(0.38 0.1 5);
+    --color-brand-950: oklch(0.26 0.07 5);
+
+    /* Dark charcoal surface used by the footer */
+    --color-charcoal: #252831;
+
+    /* Charcoal surfaces used by the brand navbar */
+    --color-ink-50: oklch(0.98 0.002 260);
+    --color-ink-100: oklch(0.955 0.004 260);
+    --color-ink-200: oklch(0.91 0.006 260);
+    --color-ink-300: oklch(0.83 0.01 260);
+    --color-ink-400: oklch(0.72 0.014 260);
+    --color-ink-500: oklch(0.62 0.016 260);
+    --color-ink-600: oklch(0.5 0.018 260);
+    --color-ink-700: oklch(0.38 0.02 260);
+    --color-ink-800: oklch(0.29 0.016 260);
+    --color-ink-900: oklch(0.22 0.012 260);
+    --color-ink-950: oklch(0.16 0.01 260);
+
+    --animate-nav-item: nav-item-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+    @keyframes nav-item-in {
+        from {
+            opacity: 0;
+            transform: translateX(14px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+}
+
 :root {
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);
@@ -54,7 +98,7 @@
     --card-foreground: oklch(0.145 0 0);
     --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
+    --primary: #ff2d83;
     --primary-foreground: oklch(0.985 0 0);
     --secondary: oklch(0.97 0 0);
     --secondary-foreground: oklch(0.205 0 0);
@@ -65,7 +109,7 @@
     --destructive: oklch(0.577 0.245 27.325);
     --border: oklch(0.922 0 0);
     --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
+    --ring: oklch(0.73 0.16 5);
     --chart-1: oklch(0.87 0 0);
     --chart-2: oklch(0.556 0 0);
     --chart-3: oklch(0.439 0 0);
@@ -89,8 +133,8 @@
     --card-foreground: oklch(0.985 0 0);
     --popover: oklch(0.205 0 0);
     --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
+    --primary: #ff2d83;
+    --primary-foreground: oklch(0.985 0 0);
     --secondary: oklch(0.269 0 0);
     --secondary-foreground: oklch(0.985 0 0);
     --muted: oklch(0.269 0 0);
@@ -100,7 +144,7 @@
     --destructive: oklch(0.704 0.191 22.216);
     --border: oklch(1 0 0 / 10%);
     --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
+    --ring: oklch(0.73 0.16 5);
     --chart-1: oklch(0.87 0 0);
     --chart-2: oklch(0.556 0 0);
     --chart-3: oklch(0.439 0 0);
@@ -117,13 +161,38 @@
 }
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
+    * {
+        @apply border-border outline-ring/50;
     }
-  body {
-    @apply bg-background text-foreground;
+    body {
+        @apply bg-background text-foreground;
     }
-  html {
-    @apply font-sans;
+    html {
+        @apply scroll-smooth font-sans;
+        scroll-padding-top: 6rem;
+    }
+}
+
+/* Light sweep across buttons on hover */
+@utility btn-shine {
+    position: relative;
+    overflow: hidden;
+
+    &::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+            105deg,
+            transparent 42%,
+            rgb(255 255 255 / 0.35) 50%,
+            transparent 58%
+        );
+        transform: translateX(-130%);
+        transition: transform 0.7s ease;
+    }
+
+    &:hover::after {
+        transform: translateX(130%);
     }
 }
