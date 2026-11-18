@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { authClient } from "@/lib/auth-client"
 import { usePathname } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import {
@@ -152,8 +153,12 @@ function isActivePathname(pathname: string, href: string) {
 
 /* ------------------------------- Component ------------------------------- */
 
-export function Navbar({ user = null, onSignOut }: NavbarProps) {
+export function Navbar() {
   const pathname = usePathname()
+
+  const { data: session } = authClient.useSession()
+  const user = session?.user
+  
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)

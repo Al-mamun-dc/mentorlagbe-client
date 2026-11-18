@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 
 import { BrandMark, BrandWordmark } from "@/components/navbar"
+import { authClient } from "@/lib/auth-client"
 
 interface SignInForm {
   email: string
@@ -63,6 +64,21 @@ export default function SignInPage() {
     console.log("Sign in form data:", form)
     setSubmitted(true)
   }
+  const handleSignIn = async () => {
+  const { data, error } = await authClient.signIn.email({
+    email: form.email,
+    password: form.password,
+    rememberMe: true,
+    callbackURL: "/",
+  })
+
+  if (error) {
+    console.log(error.message)
+    return
+  }
+
+  console.log("Login successful:", data)
+}
 
   return (
     <section className="flex min-h-[calc(100vh-16rem)] items-center justify-center px-3 py-8 sm:px-5 sm:py-12">
@@ -220,6 +236,7 @@ export default function SignInPage() {
 
             <button
               type="submit"
+              onClick={handleSignIn}
               className="btn-shine group inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-500 text-[15px] font-medium text-white shadow-lg shadow-brand-500/35 transition-all select-none hover:bg-brand-400 hover:shadow-xl hover:shadow-brand-500/45 active:translate-y-px focus-visible:ring-2 focus-visible:ring-brand-400/60 focus-visible:outline-none"
             >
               Sign In
