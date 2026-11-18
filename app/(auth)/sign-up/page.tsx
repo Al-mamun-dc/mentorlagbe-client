@@ -1,0 +1,227 @@
+"use client"
+
+import Link from "next/link"
+import { useState, type ChangeEvent } from "react"
+import { Eye, EyeOff, Lock, Mail, UserRound } from "lucide-react"
+
+import { BrandMark, BrandWordmark } from "@/components/navbar"
+import { authClient } from "@/lib/auth-client"
+
+interface SignUpForm {
+  fullName: string
+  email: string
+  password: string
+  confirmPassword: string
+}
+
+export default function SignUpPage() {
+  const [form, setForm] = useState<SignUpForm>({
+    fullName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  })
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
+  function handleChange(event: ChangeEvent<HTMLInputElement>) {
+    const { name, value } = event.target
+    setForm((current) => ({ ...current, [name]: value }))
+  }
+
+  function handleTogglePassword() {
+    setShowPassword((visible) => !visible)
+  }
+
+  function handleToggleConfirmPassword() {
+    setShowConfirmPassword((visible) => !visible)
+  }
+  const handleSignUp = async () => {
+    const { data, error } = await authClient.signUp.email({
+      name: form.fullName, // required, The name of the user.
+      email: form.email, // required, The email address of the user.
+      password: form.password, // required, The password of the user. It should be at least 8 characters long and max 128 by default.
+
+      callbackURL: "/", // An optional URL to redirect to after the user signs up.
+    });
+    if (error) {
+      console.log(error.message)
+      return
+    }
+
+    console.log("Signup successful:", data)
+  
+}
+
+return (
+  <section className="flex min-h-[calc(100vh-16rem)] items-center justify-center px-3 py-8 sm:px-5 sm:py-12">
+    <div className="w-full max-w-md overflow-hidden rounded-3xl border border-white/10 bg-[#252831] shadow-2xl shadow-black/30">
+      <div className="px-6 py-10 sm:px-10 sm:py-12">
+        <Link
+          href="/"
+          aria-label="MentorLagbe — home"
+          className="inline-flex items-center gap-2.5 rounded-xl focus-visible:ring-2 focus-visible:ring-[#FF2D83]/60 focus-visible:outline-none"
+        >
+          <BrandMark className="size-9" />
+          <BrandWordmark className="text-lg" />
+        </Link>
+
+        <h1 className="mt-6 text-2xl font-bold tracking-tight text-white sm:text-3xl">
+          Create your account
+        </h1>
+        <p className="mt-2 text-sm text-zinc-400">
+          Enter your details below to get started.
+        </p>
+
+        <div className="mt-7 space-y-4">
+          <div>
+            <label
+              htmlFor="fullName"
+              className="block text-sm font-medium text-zinc-200"
+            >
+              Full Name
+            </label>
+            <div className="relative mt-2">
+              <UserRound
+                className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-zinc-500"
+                aria-hidden
+              />
+              <input
+                id="fullName"
+                name="fullName"
+                type="text"
+                autoComplete="name"
+                placeholder="Your full name"
+                value={form.fullName}
+                onChange={handleChange}
+                className="h-12 w-full rounded-xl border border-white/10 bg-ink-950/60 pr-4 pl-11 text-sm text-white placeholder:text-zinc-600 transition-all duration-200 focus:border-[#FF2D83]/60 focus:ring-2 focus:ring-[#FF2D83]/25 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-zinc-200"
+            >
+              Email
+            </label>
+            <div className="relative mt-2">
+              <Mail
+                className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-zinc-500"
+                aria-hidden
+              />
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                placeholder="you@example.com"
+                value={form.email}
+                onChange={handleChange}
+                className="h-12 w-full rounded-xl border border-white/10 bg-ink-950/60 pr-4 pl-11 text-sm text-white placeholder:text-zinc-600 transition-all duration-200 focus:border-[#FF2D83]/60 focus:ring-2 focus:ring-[#FF2D83]/25 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-zinc-200"
+            >
+              Password
+            </label>
+            <div className="relative mt-2">
+              <Lock
+                className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-zinc-500"
+                aria-hidden
+              />
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                placeholder="Enter your password"
+                value={form.password}
+                onChange={handleChange}
+                className="h-12 w-full rounded-xl border border-white/10 bg-ink-950/60 pr-12 pl-11 text-sm text-white placeholder:text-zinc-600 transition-all duration-200 focus:border-[#FF2D83]/60 focus:ring-2 focus:ring-[#FF2D83]/25 focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={handleTogglePassword}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-pressed={showPassword}
+                className="absolute top-1/2 right-2 grid size-8 -translate-y-1/2 place-items-center rounded-lg text-zinc-500 transition-colors hover:text-[#FF2D83] focus-visible:ring-2 focus-visible:ring-[#FF2D83]/60 focus-visible:outline-none"
+              >
+                {showPassword ? (
+                  <EyeOff className="size-4" aria-hidden />
+                ) : (
+                  <Eye className="size-4" aria-hidden />
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="confirmPassword"
+              className="block text-sm font-medium text-zinc-200"
+            >
+              Confirm Password
+            </label>
+            <div className="relative mt-2">
+              <Lock
+                className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-zinc-500"
+                aria-hidden
+              />
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                autoComplete="new-password"
+                placeholder="Confirm your password"
+                value={form.confirmPassword}
+                onChange={handleChange}
+                className="h-12 w-full rounded-xl border border-white/10 bg-ink-950/60 pr-12 pl-11 text-sm text-white placeholder:text-zinc-600 transition-all duration-200 focus:border-[#FF2D83]/60 focus:ring-2 focus:ring-[#FF2D83]/25 focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={handleToggleConfirmPassword}
+                aria-label={
+                  showConfirmPassword ? "Hide password" : "Show password"
+                }
+                aria-pressed={showConfirmPassword}
+                className="absolute top-1/2 right-2 grid size-8 -translate-y-1/2 place-items-center rounded-lg text-zinc-500 transition-colors hover:text-[#FF2D83] focus-visible:ring-2 focus-visible:ring-[#FF2D83]/60 focus-visible:outline-none"
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="size-4" aria-hidden />
+                ) : (
+                  <Eye className="size-4" aria-hidden />
+                )}
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleSignUp}
+            className="btn-shine mt-2 inline-flex h-12 w-full items-center justify-center rounded-xl bg-[#FF2D83] text-[15px] font-medium text-white shadow-lg shadow-[#FF2D83]/35 transition-all select-none hover:bg-[#ff4b97] hover:shadow-xl hover:shadow-[#FF2D83]/45 active:translate-y-px focus-visible:ring-2 focus-visible:ring-[#FF2D83]/60 focus-visible:outline-none"
+          >
+            Create Account
+          </button>
+        </div>
+
+        <p className="mt-7 text-center text-sm text-zinc-400">
+          Already have an account?{" "}
+          <Link
+            href="/sign-in"
+            className="font-medium text-[#FF2D83] transition-colors hover:text-[#ff4b97] hover:underline focus-visible:rounded focus-visible:ring-2 focus-visible:ring-[#FF2D83]/60 focus-visible:outline-none"
+          >
+            Sign In
+          </Link>
+        </p>
+      </div>
+    </div>
+  </section>
+)
+}

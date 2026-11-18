@@ -78,6 +78,9 @@
     --color-ink-950: oklch(0.16 0.01 260);
 
     --animate-nav-item: nav-item-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+    --animate-float: float 6s ease-in-out infinite;
+    --animate-float-slow: float 8s ease-in-out 1s infinite;
+    --animate-hero-up: hero-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 
     @keyframes nav-item-in {
         from {
@@ -87,6 +90,27 @@
         to {
             opacity: 1;
             transform: translateX(0);
+        }
+    }
+
+    @keyframes float {
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+
+    @keyframes hero-up {
+        from {
+            opacity: 0;
+            transform: translateY(18px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
         }
     }
 }
@@ -194,5 +218,16 @@
 
     &:hover::after {
         transform: translateX(130%);
+    }
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
     }
 }
