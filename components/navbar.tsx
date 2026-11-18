@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { authClient } from "@/lib/auth-client"
-import { usePathname } from "next/navigation"
+import { usePathname,useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import {
   ArrowRight,
@@ -34,22 +34,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Pricing / Pro Plans", href: "/pricing", icon: Crown },
   { label: "How It Works", href: "/About", icon: Info },
 ]
-
-/* --------------------------------- Types --------------------------------- */
-
-export interface NavUser {
-  name?: string | null
-  email?: string | null
-  image?: string | null
-}
-
-export interface NavbarProps {
-  /** Signed-in user. Pass `null`/omit to show the Sign In / Sign Up buttons. */
-  user?: NavUser | null
-  /** Called when the user picks "Sign out". */
-  onSignOut?: () => void
-}
-
 /* --------------------------------- Brand --------------------------------- */
 
 /** MentorLagbe mark: a graduation cap floating above an open book. */
@@ -153,16 +137,35 @@ function isActivePathname(pathname: string, href: string) {
 
 /* ------------------------------- Component ------------------------------- */
 
+
 export function Navbar() {
   const pathname = usePathname()
+  const router = useRouter()
 
   const { data: session } = authClient.useSession()
   const user = session?.user
-  
+
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+
   const userMenuRef = useRef<HTMLDivElement>(null)
+
+  // Sign out function
+  const handleSignOut = async () => {
+    try {
+      await authClient.signOut()
+
+      setUserMenuOpen(false)
+      setMobileOpen(false)
+
+      router.push("/")
+      router.refresh()
+    } catch (error) {
+      console.error("Sign out failed:", error)
+    }
+  }
+
 
   // Elevate the navbar once the page is scrolled.
   useEffect(() => {
@@ -233,7 +236,7 @@ export function Navbar() {
             "relative flex h-14 items-center gap-2 rounded-2xl border bg-ink-900 pr-2.5 pl-3 transition-all duration-300 sm:gap-3",
             scrolled
               ? "border-white/10 bg-ink-900/90 shadow-2xl shadow-black/40 backdrop-blur-xl"
-              : "border-white/[0.06] bg-ink-900/70 shadow-lg shadow-black/20 backdrop-blur-md"
+              : "border-white/6 bg-ink-900/70 shadow-lg shadow-black/20 backdrop-blur-md"
           )}
         >
           {/* Hairline glows */}
@@ -356,10 +359,7 @@ export function Navbar() {
                     <button
                       type="button"
                       role="menuitem"
-                      onClick={() => {
-                        setUserMenuOpen(false)
-                        onSignOut?.()
-                      }}
+                     onClick={handleSignOut}
                       className="flex w-full items-center gap-1.5 rounded-md px-1.5 py-1.5 text-red-400 hover:bg-red-500/10 focus-visible:bg-red-500/10 focus-visible:outline-none"
                     >
                       <LogOut className="size-4" />
@@ -500,10 +500,7 @@ export function Navbar() {
                 </Link>
                 <button
                   type="button"
-                  onClick={() => {
-                    setMobileOpen(false)
-                    onSignOut?.()
-                  }}
+                 onClick={handleSignOut}
                   className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-red-500/15 text-sm font-medium text-red-400 transition-all select-none hover:bg-red-500/25 active:translate-y-px"
                 >
                   <LogOut className="size-4" />

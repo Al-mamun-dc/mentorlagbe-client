@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useState, type ChangeEvent, type FormEvent } from "react"
 import {
   GraduationCap,
@@ -33,6 +34,7 @@ const ROLES = [
 ] as const
 
 export default function SignUpPage() {
+  const router = useRouter()
   const [form, setForm] = useState<SignUpForm>({
     fullName: "",
     email: "",
@@ -44,13 +46,11 @@ export default function SignUpPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-  const [success, setSuccess] = useState(false)
 
   function handleChange(event: ChangeEvent<HTMLInputElement>) {
     const { name, value } = event.target
     setForm((current) => ({ ...current, [name]: value }))
     setError("")
-    setSuccess(false)
   }
 
   function handleTogglePassword() {
@@ -64,7 +64,6 @@ export default function SignUpPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError("")
-    setSuccess(false)
 
     if (form.password !== form.confirmPassword) {
       setError("Passwords do not match.")
@@ -78,7 +77,6 @@ export default function SignUpPage() {
       email: form.email,
       password: form.password,
       role: form.role,
-       callbackURL:"/",
     })
 
     setIsLoading(false)
@@ -88,7 +86,8 @@ export default function SignUpPage() {
       return
     }
 
-    setSuccess(true)
+    router.push("/")
+    router.refresh()
   }
 
   return (
@@ -291,15 +290,6 @@ export default function SignUpPage() {
               </p>
             )}
 
-            {success && (
-              <p
-                role="status"
-                className="rounded-xl border border-[#FF2D83]/30 bg-[#FF2D83]/10 px-3.5 py-3 text-sm text-[#ff8ab9]"
-              >
-                Account created successfully.
-              </p>
-            )}
-
             <button
               type="submit"
               disabled={isLoading}
@@ -313,7 +303,7 @@ export default function SignUpPage() {
             Already have an account?{" "}
             <Link
               href="/sign-in"
-              className="font-medium text-[#FF2D83] transition-colors hover:text-[#ff4b97] hover:underline focus-visible:rounded focus-visible:ring-2 focus-visible:ring-[#FF2D83]/60 focus-visible:outline-none"
+              className="font-medium text-500 transition-colors hover:text-[#ff4b97] hover:underline focus-visible:rounded focus-visible:ring-2 focus-visible:ring-[#FF2D83]/60 focus-visible:outline-none"
             >
               Sign In
             </Link>
