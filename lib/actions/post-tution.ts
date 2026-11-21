@@ -7,7 +7,7 @@ interface TuitionFormState {
   monthlyFee: string;
   daysPerWeek: string;
   description: string;
-  bannerImage: string;
+  bannerImage?: string;
 }
 
 interface PostTuitionError {
@@ -51,6 +51,30 @@ export const deleteTution = async (id: string) => {
 
   if (!res.ok) {
     throw new Error(result.error || `Failed to delete tuition. (HTTP ${res.status})`)
+  }
+
+  return result
+}
+
+
+
+export const updateTution = async (
+  id: string,
+  data: TuitionFormState
+) => {
+  const res = await fetch(`${BASE_URL}/tution-post/${id}`, {
+    method: "PATCH",
+    credentials: "include",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(data),
+  })
+
+  const result = (await res.json().catch(() => ({}))) as PostTuitionError
+
+  if (!res.ok) {
+    throw new Error(result.error || "Failed to update tuition.")
   }
 
   return result

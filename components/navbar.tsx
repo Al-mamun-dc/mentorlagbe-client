@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { authClient } from "@/lib/auth-client"
-import { usePathname,useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import {
   ArrowRight,
@@ -224,14 +224,14 @@ export function Navbar() {
 
   return (
     <header
-  className={cn(
-    "fixed top-0 z-40 transition-all duration-300",
-    pathname.startsWith("/dashboard")
-      ? "left-64 w-[calc(100%-16rem)]"
-      : "inset-x-0",
-    scrolled ? "pt-2" : "pt-3 sm:pt-4"
-  )}
->
+      className={cn(
+        "fixed top-0 z-40 transition-all duration-300",
+        pathname.startsWith("/dashboard")
+          ? "left-64 w-[calc(100%-16rem)]"
+          : "inset-x-0",
+        scrolled ? "pt-2" : "pt-3 sm:pt-4"
+      )}
+    >
       <div className="mx-auto w-full max-w-7xl px-3 sm:px-5">
         <nav
           aria-label="Main navigation"
@@ -351,7 +351,13 @@ export function Navbar() {
                     </div>
                     <div className="-mx-1 my-1 h-px bg-white/10" />
                     <Link
-                      href="/dashboard"
+                      href={
+                        session?.user?.role === "admin"
+                          ? "/dashboard/admin"
+                          : session?.user?.role === "tutor"
+                            ? "/dashboard/tutor"
+                            : "/dashboard/student"
+                      }
                       role="menuitem"
                       onClick={() => setUserMenuOpen(false)}
                       className="flex items-center gap-1.5 rounded-md px-1.5 py-1.5 hover:bg-white/10 focus-visible:bg-white/10 focus-visible:outline-none"
@@ -362,7 +368,7 @@ export function Navbar() {
                     <button
                       type="button"
                       role="menuitem"
-                     onClick={handleSignOut}
+                      onClick={handleSignOut}
                       className="flex w-full items-center gap-1.5 rounded-md px-1.5 py-1.5 text-red-400 hover:bg-red-500/10 focus-visible:bg-red-500/10 focus-visible:outline-none"
                     >
                       <LogOut className="size-4" />
@@ -503,7 +509,7 @@ export function Navbar() {
                 </Link>
                 <button
                   type="button"
-                 onClick={handleSignOut}
+                  onClick={handleSignOut}
                   className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl bg-red-500/15 text-sm font-medium text-red-400 transition-all select-none hover:bg-red-500/25 active:translate-y-px"
                 >
                   <LogOut className="size-4" />
@@ -536,5 +542,5 @@ export function Navbar() {
         </div>
       </div>
     </header>
-  ) 
+  )
 }

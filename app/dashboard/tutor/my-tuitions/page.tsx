@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, type ChangeEvent, type FormEvent } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import {
   BookOpen,
@@ -23,17 +23,9 @@ import {
 import { gettution } from "@/lib/api/tution"
 
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet"
 import { DeleteTutionDialog } from "@/app/components/DeleteDialog"
-import { deleteTution } from "@/lib/actions/post-tution"
+import { EditTutionDialog, type TuitionFormState } from "@/app/components/EditTutionDialog"
+import { deleteTution, updateTution } from "@/lib/actions/post-tution"
 import { toast } from "@/components/ui/toast"
 
 /* --------------------------------- Types --------------------------------- */
@@ -56,20 +48,6 @@ interface Tuition {
   approvalStatus: ApprovalStatus
   tutorStatus: TutorStatus
 }
-
-/* The edit form keeps numbers as strings so the inputs stay easy to control. */
-interface TuitionFormState {
-  title: string
-  subject: string
-  classLevel: string
-  mode: Mode
-  location: string
-  monthlyFee: string
-  daysPerWeek: string
-  description: string
-}
-
-type FormErrors = Partial<Record<keyof TuitionFormState, string>>
 
 /* Raw record as it comes from MongoDB through the API. */
 interface ApiTuition {
@@ -119,30 +97,6 @@ function normalizeTuition(raw: ApiTuition, index: number): Tuition {
     tutorStatus,
   }
 }
-
-const SUBJECTS = [
-  "Mathematics",
-  "Physics",
-  "Programming",
-  "IELTS",
-  "Chemistry",
-  "Biology",
-  "English",
-]
-
-const CLASS_LEVELS = [
-  "Class 1–5",
-  "Class 6–8",
-  "Class 9–10",
-  "Class 11–12",
-  "Undergraduate",
-  "Adults / Professional",
-]
-
-const DAYS_PER_WEEK = ["1", "2", "3", "4", "5", "6", "7"]
-
-const SELECT_CLASS =
-  "h-9 w-full rounded-lg border border-input bg-background px-2.5 text-sm text-foreground outline-none transition-colors focus:border-brand-500/60 focus:ring-2 focus:ring-brand-500/25 [&>option]:bg-background"
 
 /* ------------------------------ Small helpers ----------------------------- */
 
@@ -226,13 +180,10 @@ function StatCard({
 /* --------------------------------- Component ------------------------------ */
 
 export default function MyCreatedTuitionsPage() {
-  /* Tuitions are loaded from the API; edits stay in frontend state for now. */
   const [tuitions, setTuitions] = useState<Tuition[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [fetchError, setFetchError] = useState("")
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editingForm, setEditingForm] = useState<TuitionFormState | null>(null)
-  const [editErrors, setEditErrors] = useState<FormErrors>({})
+  const [editingTuition, setEditingTuition] = useState<Tuition | null>(null)
 
   useEffect(() => {
     let isMounted = true
@@ -274,99 +225,44 @@ export default function MyCreatedTuitionsPage() {
   }
 
   function openEditor(tuition: Tuition) {
-    setEditingId(tuition.id)
-    setEditingForm({
-      title: tuition.title,
-      subject: tuition.subject,
-      classLevel: tuition.classLevel,
-      mode: tuition.mode,
-      location: tuition.location === "Online" ? "" : tuition.location,
-      monthlyFee: String(tuition.monthlyFee),
-      daysPerWeek: String(tuition.daysPerWeek),
-      description: tuition.description,
-    })
-    setEditErrors({})
+    setEditingTuition(tuition)
   }
 
-  function closeEditor() {
-    setEditingId(null)
-    setEditingForm(null)
-    setEditErrors({})
-  }
+  async function handleSaveEdit(id: string, form: TuitionFormState) {
+    try {
+      await updateTution(id, form)
 
-  function handleEditChange(
-    event: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) {
-    const { name, value } = event.target
-    setEditingForm((current) =>
-      current ? { ...current, [name]: value } : current
-    )
-    setEditErrors((current) => ({ ...current, [name]: undefined }))
-  }
-
-  function handleEditModeChange(mode: Mode) {
-    setEditingForm((current) => (current ? { ...current, mode } : current))
-    setEditErrors((current) => ({
-      ...current,
-      mode: undefined,
-      ...(mode === "online" ? { location: undefined } : {}),
-    }))
-  }
-
-  function validateEditForm(form: TuitionFormState): FormErrors {
-    const errors: FormErrors = {}
-
-    if (!form.title.trim()) errors.title = "Title is required."
-    if (!form.subject) errors.subject = "Select a subject."
-    if (!form.classLevel) errors.classLevel = "Select a class level."
-    if (form.mode === "offline" && !form.location.trim()) {
-      errors.location = "Location is required for offline tuitions."
-    }
-
-    const fee = Number(form.monthlyFee)
-    if (!form.monthlyFee.trim()) {
-      errors.monthlyFee = "Monthly fee is required."
-    } else if (!Number.isFinite(fee) || fee <= 0) {
-      errors.monthlyFee = "Monthly fee must be greater than 0."
-    }
-
-    const days = Number(form.daysPerWeek)
-    if (!form.daysPerWeek) {
-      errors.daysPerWeek = "Days per week is required."
-    } else if (!Number.isInteger(days) || days < 1 || days > 7) {
-      errors.daysPerWeek = "Days per week must be between 1 and 7."
-    }
-
-    if (!form.description.trim()) errors.description = "Description is required."
-
-    return errors
-  }
-
-  function handleSaveEdit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (!editingForm || !editingId) return
-
-    const errors = validateEditForm(editingForm)
-    setEditErrors(errors)
-    if (Object.keys(errors).length > 0) return
-
-    const { monthlyFee, daysPerWeek, ...textFields } = editingForm
-
-    /* Only the browser state changes here — no backend request is made. */
-    setTuitions((current) =>
-      current.map((item) =>
-        item.id === editingId
-          ? {
-            ...item,
-            ...textFields,
-            location: textFields.mode === "online" ? "Online" : textFields.location.trim(),
-            monthlyFee: Number(monthlyFee),
-            daysPerWeek: Number(daysPerWeek),
-          }
-          : item
+      const { monthlyFee, daysPerWeek, ...textFields } = form
+      setTuitions((current) =>
+        current.map((item) =>
+          item.id === id
+            ? {
+              ...item,
+              ...textFields,
+              location: textFields.mode === "online" ? "Online" : textFields.location.trim(),
+              monthlyFee: Number(monthlyFee),
+              daysPerWeek: Number(daysPerWeek),
+            }
+            : item
+        )
       )
-    )
-    closeEditor()
+      setEditingTuition(null)
+
+      toast.add({
+        title: "Success",
+        description: "Tuition updated successfully!",
+      })
+    } catch (error) {
+      console.error(error)
+
+      toast.add({
+        title: "Error",
+        description:
+          error instanceof Error ? error.message : "Failed to update tuition.",
+      })
+
+      throw error
+    }
   }
 
   function toggleTutorStatus(id: string) {
@@ -597,223 +493,16 @@ export default function MyCreatedTuitionsPage() {
         </div>
       )}
 
-      {/* Edit sheet */}
-      <Sheet
-        open={editingForm !== null}
-        onOpenChange={(open) => {
-          if (!open) closeEditor()
-        }}
-      >
-        <SheetContent
-          side="right"
-          className="w-full overflow-y-auto bg-card sm:max-w-xl"
-        >
-          <SheetHeader>
-            <SheetTitle>Edit tuition</SheetTitle>
-            <SheetDescription>
-              Update the details of this tuition listing. Changes are saved in
-              this browser only for now.
-            </SheetDescription>
-          </SheetHeader>
-
-          {editingForm && (
-            <form
-              onSubmit={handleSaveEdit}
-              noValidate
-              className="flex flex-1 flex-col gap-4 px-4 pb-6"
-            >
-              <div>
-                <label htmlFor="edit-title" className="mb-1.5 block text-sm font-medium">
-                  Title
-                </label>
-                <Input
-                  id="edit-title"
-                  name="title"
-                  value={editingForm.title}
-                  onChange={handleEditChange}
-                  aria-invalid={!!editErrors.title}
-                />
-                {editErrors.title && (
-                  <p role="alert" className="mt-1 text-xs text-destructive">
-                    {editErrors.title}
-                  </p>
-                )}
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label htmlFor="edit-subject" className="mb-1.5 block text-sm font-medium">
-                    Subject
-                  </label>
-                  <select
-                    id="edit-subject"
-                    name="subject"
-                    value={editingForm.subject}
-                    onChange={handleEditChange}
-                    className={SELECT_CLASS}
-                  >
-                    <option value="">Select a subject</option>
-                    {SUBJECTS.map((subject) => (
-                      <option key={subject} value={subject}>
-                        {subject}
-                      </option>
-                    ))}
-                  </select>
-                  {editErrors.subject && (
-                    <p role="alert" className="mt-1 text-xs text-destructive">
-                      {editErrors.subject}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label htmlFor="edit-classLevel" className="mb-1.5 block text-sm font-medium">
-                    Class level
-                  </label>
-                  <select
-                    id="edit-classLevel"
-                    name="classLevel"
-                    value={editingForm.classLevel}
-                    onChange={handleEditChange}
-                    className={SELECT_CLASS}
-                  >
-                    <option value="">Select a class level</option>
-                    {CLASS_LEVELS.map((level) => (
-                      <option key={level} value={level}>
-                        {level}
-                      </option>
-                    ))}
-                  </select>
-                  {editErrors.classLevel && (
-                    <p role="alert" className="mt-1 text-xs text-destructive">
-                      {editErrors.classLevel}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <span className="mb-1.5 block text-sm font-medium">Mode</span>
-                <div className="grid grid-cols-2 gap-2">
-                  {(["online", "offline"] as const).map((mode) => (
-                    <button
-                      key={mode}
-                      type="button"
-                      aria-pressed={editingForm.mode === mode}
-                      onClick={() => handleEditModeChange(mode)}
-                      className={`h-9 rounded-lg border text-sm font-medium capitalize transition-colors ${editingForm.mode === mode
-                        ? "border-brand-500/60 bg-brand-500/10 text-brand-600 dark:text-brand-300"
-                        : "border-input bg-background text-muted-foreground hover:text-foreground"
-                        }`}
-                    >
-                      {mode}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {editingForm.mode === "offline" && (
-                <div>
-                  <label htmlFor="edit-location" className="mb-1.5 block text-sm font-medium">
-                    Location
-                  </label>
-                  <Input
-                    id="edit-location"
-                    name="location"
-                    value={editingForm.location}
-                    onChange={handleEditChange}
-                    placeholder="e.g. Dhanmondi, Dhaka"
-                    aria-invalid={!!editErrors.location}
-                  />
-                  {editErrors.location && (
-                    <p role="alert" className="mt-1 text-xs text-destructive">
-                      {editErrors.location}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label htmlFor="edit-monthlyFee" className="mb-1.5 block text-sm font-medium">
-                    Monthly fee (৳)
-                  </label>
-                  <Input
-                    id="edit-monthlyFee"
-                    name="monthlyFee"
-                    type="number"
-                    min="1"
-                    value={editingForm.monthlyFee}
-                    onChange={handleEditChange}
-                    aria-invalid={!!editErrors.monthlyFee}
-                  />
-                  {editErrors.monthlyFee && (
-                    <p role="alert" className="mt-1 text-xs text-destructive">
-                      {editErrors.monthlyFee}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label htmlFor="edit-daysPerWeek" className="mb-1.5 block text-sm font-medium">
-                    Days per week
-                  </label>
-                  <select
-                    id="edit-daysPerWeek"
-                    name="daysPerWeek"
-                    value={editingForm.daysPerWeek}
-                    onChange={handleEditChange}
-                    className={SELECT_CLASS}
-                  >
-                    <option value="">Select days</option>
-                    {DAYS_PER_WEEK.map((day) => (
-                      <option key={day} value={day}>
-                        {day} {day === "1" ? "day" : "days"}
-                      </option>
-                    ))}
-                  </select>
-                  {editErrors.daysPerWeek && (
-                    <p role="alert" className="mt-1 text-xs text-destructive">
-                      {editErrors.daysPerWeek}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="edit-description" className="mb-1.5 block text-sm font-medium">
-                  Description
-                </label>
-                <textarea
-                  id="edit-description"
-                  name="description"
-                  rows={4}
-                  value={editingForm.description}
-                  onChange={handleEditChange}
-                  className={`${SELECT_CLASS} h-auto min-h-24 resize-y py-2`}
-                />
-                {editErrors.description && (
-                  <p role="alert" className="mt-1 text-xs text-destructive">
-                    {editErrors.description}
-                  </p>
-                )}
-              </div>
-
-              <SheetFooter className="px-0 pt-2 sm:flex-row sm:justify-end">
-                <Button type="button" variant="outline" onClick={closeEditor}>
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  className="bg-brand-500 text-white hover:bg-brand-400"
-                >
-                  Save changes
-                </Button>
-              </SheetFooter>
-            </form>
-          )}
-        </SheetContent>
-      </Sheet>
+      {editingTuition && (
+        <EditTutionDialog
+          open={editingTuition !== null}
+          onOpenChange={(open) => {
+            if (!open) setEditingTuition(null)
+          }}
+          tuition={editingTuition}
+          onSave={handleSaveEdit}
+        />
+      )}
 
     </section>
   )

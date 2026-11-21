@@ -24,6 +24,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { posttution } from "@/lib/actions/post-tution"
+import { toast } from "@/components/ui/toast"
 
 type Mode = "online" | "offline"
 
@@ -310,30 +311,43 @@ export default function PostTuitionPage() {
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
+  event.preventDefault()
 
-    const nextErrors = validateForm()
-    setErrors(nextErrors)
-    setStatusMessage("")
-    setStatusError(false)
+  const nextErrors = validateForm()
+  setErrors(nextErrors)
+  setStatusMessage("")
+  setStatusError(false)
 
-    if (Object.keys(nextErrors).length > 0) return
+  if (Object.keys(nextErrors).length > 0) return
 
-    setIsSubmitting(true)
+  setIsSubmitting(true)
 
-    try {
-      await posttution(form)
-      setStatusMessage("Tuition posted successfully!")
-    } catch (error) {
-      setStatusError(true)
-      setStatusMessage(
-        error instanceof Error ? error.message : "Failed to post tuition."
-      )
-    } finally {
-      setIsSubmitting(false)
-    }
+  try {
+    await posttution(form)
+
+    setStatusMessage("Tuition posted successfully!")
+
+    toast.add({
+      title: "Success",
+      description: "Tuition posted successfully!",
+    })
+
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to post tuition."
+
+    setStatusError(true)
+    setStatusMessage(message)
+
+    toast.add({
+      title: "Error",
+      description: message,
+    })
+
+  } finally {
+    setIsSubmitting(false)
   }
-
+}
   return (
     <section className="mx-auto w-full max-w-5xl">
       <div className="mb-6">
