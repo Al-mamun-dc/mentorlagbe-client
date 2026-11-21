@@ -25,6 +25,7 @@ import {
   Settings,
   ShieldCheck,
 } from "lucide-react"
+import Link from "next/link"
 
 type Role = "student" | "tutor" | "admin"
 
@@ -55,7 +56,7 @@ const menuItemByRole = {
     },
     {
       name: "Post Tuition",
-      url: "/dashboard/tutor/post-tuition",
+      url: "/dashboard/tutor/post-tution",
       icon: PlusCircle,
     },
     {
@@ -107,6 +108,7 @@ const menuItemByRole = {
 export function DashboardSidebar() {
   const { data: session, isPending } = useSession()
 
+
   const role = session?.user?.role as Role | undefined
 
   const projects= role ? menuItemByRole[role] : []
@@ -125,7 +127,7 @@ export function DashboardSidebar() {
             {projects.map((project) => (
               <SidebarMenuItem key={project.name}>
                 <SidebarMenuButton
-                  render={<a href={project.url} />}
+                  render={<Link href={project.url} />}
                 >
                   <project.icon />
                   <span>{project.name}</span>

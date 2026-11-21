@@ -224,11 +224,14 @@ export function Navbar() {
 
   return (
     <header
-      className={cn(
-        "fixed inset-x-0 top-0 z-40 transition-all duration-300",
-        scrolled ? "pt-2" : "pt-3 sm:pt-4"
-      )}
-    >
+  className={cn(
+    "fixed top-0 z-40 transition-all duration-300",
+    pathname.startsWith("/dashboard")
+      ? "left-64 w-[calc(100%-16rem)]"
+      : "inset-x-0",
+    scrolled ? "pt-2" : "pt-3 sm:pt-4"
+  )}
+>
       <div className="mx-auto w-full max-w-7xl px-3 sm:px-5">
         <nav
           aria-label="Main navigation"

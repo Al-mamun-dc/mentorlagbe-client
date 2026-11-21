@@ -3,6 +3,7 @@ import type { ComponentType } from "react"
 import { Mail, MapPin, Phone } from "lucide-react"
 
 import { BrandMark, BrandWordmark } from "@/components/navbar"
+import { cn } from "cn"
 
 /* ------------------------------ Brand icons ------------------------------ */
 /* Lucide no longer ships brand logos, so the social marks are inline SVGs.  */
@@ -87,7 +88,10 @@ export function Footer() {
   const year = new Date().getFullYear()
 
   return (
-    <footer className="px-3 pt-8 pb-3 sm:px-5 sm:pb-5">
+    <footer className={cn(
+    "px-3 pt-8 pb-3 sm:px-5 sm:pb-5",
+    "ml-0 md:ml-64"
+  )}>
       <div className="relative mx-auto w-full max-w-7xl overflow-hidden rounded-3xl border border-white/10 bg-charcoal text-zinc-300 shadow-2xl shadow-black/30">
         {/* Ambient glows — echoes the navbar's hairline highlights */}
         <span
