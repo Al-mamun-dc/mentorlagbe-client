@@ -15,6 +15,7 @@ import {
 
 import { getTuitionById, type TuitionDetails } from "@/lib/api/tution"
 import { SectionHeading, SectionShell } from "@/components/sections/shared"
+import { ApplyTuitionCard } from "./apply-tuition"
 
 export const metadata = {
   title: "Tuition Details | MentorLagbe",
@@ -299,6 +300,8 @@ export default async function TuitionDetailsPage({
                   </p>
                 )}
               </div>
+
+              <ApplyTuitionCard tuitionId={details.id} tuitionTitle={details.title} />
             </aside>
           </div>
         </div>
