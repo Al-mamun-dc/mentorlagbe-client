@@ -19,13 +19,17 @@ interface TuitionFiltersProps {
 }
 
 const SUBJECTS = [
+  "All Subjects",
+  "Biology",
+  "Chemistry",
+  "English",
+  "Higher Mathematics",
+  "ICT",
+  "IELTS",
   "Mathematics",
   "Physics",
   "Programming",
-  "IELTS",
-  "Chemistry",
-  "Biology",
-  "English",
+  "Science",
 ]
 
 const CLASS_LEVELS = [
