@@ -3,33 +3,17 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState, type ChangeEvent, type FormEvent } from "react"
-import {
-  GraduationCap,
-  Eye,
-  EyeOff,
-  Lock,
-  Mail,
-  Presentation,
-  UserRound,
-} from "lucide-react"
+import { Eye, EyeOff, Lock, Mail, UserRound } from "lucide-react"
 
 import { BrandMark, BrandWordmark } from "@/components/navbar"
 import { authClient } from "@/lib/auth-client"
-
-type Role = "student" | "tutor"
 
 interface SignUpForm {
   fullName: string
   email: string
   password: string
   confirmPassword: string
-  role: Role
 }
-
-const ROLES = [
-  { value: "student", label: "Student", icon: GraduationCap },
-  { value: "tutor", label: "Tutor", icon: Presentation },
-] as const
 
 export default function SignUpPage() {
   const router = useRouter()
@@ -38,7 +22,6 @@ export default function SignUpPage() {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "student",
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -74,7 +57,6 @@ export default function SignUpPage() {
       name: form.fullName,
       email: form.email,
       password: form.password,
-      role: form.role,
     })
 
     setIsLoading(false)
@@ -241,45 +223,9 @@ export default function SignUpPage() {
               </div>
             </div>
 
-            <fieldset>
-              <legend className="text-sm font-medium text-zinc-200">
-                I am a
-              </legend>
-              <div className="mt-2 grid grid-cols-2 gap-2">
-                {ROLES.map(({ value, label, icon: Icon }) => {
-                  const selected = form.role === value
-
-                  return (
-                    <label
-                      key={value}
-                      className={`flex cursor-pointer flex-col items-center gap-1.5 rounded-xl border px-2 py-3 text-center transition-all duration-200 focus-within:ring-2 focus-within:ring-[#FF2D83]/60 ${
-                        selected
-                          ? "border-[#FF2D83]/60 bg-[#FF2D83]/10"
-                          : "border-white/10 bg-ink-950/60 hover:border-white/25"
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="role"
-                        value={value}
-                        checked={selected}
-                        onChange={handleChange}
-                        className="sr-only"
-                      />
-                      <Icon
-                        className={`size-5 ${selected ? "text-[#FF2D83]" : "text-zinc-500"}`}
-                        aria-hidden
-                      />
-                      <span className="text-xs font-medium text-white">
-                        {label}
-                      </span>
-                    </label>
-                  )
-                })}
-              </div>
-            </fieldset>
             <p className="text-xs text-zinc-500">
-              Admin accounts are assigned by an existing administrator.
+              New accounts are created as students by default. Admin access is
+              assigned by an existing administrator.
             </p>
 
             {error && (

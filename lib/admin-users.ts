@@ -1,8 +1,10 @@
+import { headers } from "next/headers"
 import { type Document } from "mongodb"
 
+import { auth } from "@/lib/auth"
+import type { AdminRole, AdminUser } from "@/lib/api/admin"
 import { getDatabase } from "@/lib/db"
 import { toObjectId } from "@/lib/object-id"
-import type { AdminRole, AdminUser } from "@/lib/api/admin"
 
 const ALLOWED_ROLES: AdminRole[] = ["student", "tutor", "admin"]
 
@@ -27,27 +29,6 @@ function normalizeRole(value: unknown): AdminRole | null {
   return value === "student" || value === "tutor" || value === "admin" ? value : null
 }
 
-function toAdminUser(doc: Document): AdminUser {
-  return {
-    id: String(doc._id),
-    name: typeof doc.name === "string" ? doc.name : "",
-    email: typeof doc.email === "string" ? doc.email : "",
-    role: normalizeRole(doc.role),
-    plan: doc.plan === "pro" ? "pro" : "free",
-    createdAt: asTimestamp(doc.createdAt),
-  }
-}
-
-function updatedDocument(result: unknown): Document | null {
-  if (!result || typeof result !== "object") return null
-  if ("value" in (result as Record<string, unknown>)) {
-    const value = (result as { value?: unknown }).value
-    return value && typeof value === "object" ? (value as Document) : null
-  }
-  if ("_id" in (result as Record<string, unknown>)) return result as Document
-  return null
-}
-
 export class AdminUserError extends Error {
   status: 400 | 404 | 409
 
@@ -57,28 +38,77 @@ export class AdminUserError extends Error {
   }
 }
 
-/** Returns safe user fields for admin management. No auth/token/Stripe secrets exposed. */
-export async function listAdminUsers(): Promise<AdminUser[]> {
+type BetterAuthUserLike = Record<string, unknown> & { id?: string; _id?: unknown }
+
+function toAdminUser(doc: BetterAuthUserLike, plan: "free" | "pro"): AdminUser {
+  const id = typeof doc.id === "string" ? doc.id : String(doc._id ?? "")
+  return {
+    id,
+    name: typeof doc.name === "string" ? doc.name : "",
+    email: typeof doc.email === "string" ? doc.email : "",
+    role: normalizeRole(doc.role),
+    plan,
+    createdAt: asTimestamp(doc.createdAt),
+  }
+}
+
+async function getPlansByUserIds(userIds: string[]): Promise<Map<string, "free" | "pro">> {
+  const plans = new Map<string, "free" | "pro">()
+  if (userIds.length === 0) return plans
+
+  const objectIds = userIds
+    .map((id) => toObjectId(id))
+    .filter((id): id is NonNullable<typeof id> => Boolean(id))
+
+  if (objectIds.length === 0) return plans
+
   const db = await getDatabase()
-  const users = await db
+  const docs = await db
     .collection("user")
-    .find(
-      {},
-      {
-        projection: {
-          _id: 1,
-          name: 1,
-          email: 1,
-          role: 1,
-          plan: 1,
-          createdAt: 1,
-        },
-      }
-    )
-    .sort({ createdAt: -1, _id: -1 })
+    .find({ _id: { $in: objectIds } }, { projection: { _id: 1, plan: 1 } })
     .toArray()
 
-  return users.map(toAdminUser)
+  for (const doc of docs as Document[]) {
+    plans.set(String(doc._id), doc.plan === "pro" ? "pro" : "free")
+  }
+
+  return plans
+}
+
+/** Lists users via Better Auth Admin Plugin API. Enriches with plan from DB. */
+export async function listAdminUsers(): Promise<AdminUser[]> {
+  const requestHeaders = await headers()
+  const allUsers: BetterAuthUserLike[] = []
+  const limit = 100
+  let offset = 0
+
+  for (;;) {
+    const result = await auth.api.listUsers({
+      headers: requestHeaders,
+      query: {
+        limit,
+        offset,
+      },
+    })
+
+    const users = Array.isArray(result?.users)
+      ? (result.users as unknown as BetterAuthUserLike[])
+      : []
+    allUsers.push(...users)
+
+    const total = typeof result?.total === "number" ? result.total : users.length
+    offset += users.length
+    if (users.length === 0 || offset >= total) break
+  }
+
+  const plans = await getPlansByUserIds(
+    allUsers.map((u) => (typeof u.id === "string" ? u.id : String(u._id ?? ""))).filter(Boolean)
+  )
+
+  return allUsers.map((user) => {
+    const id = typeof user.id === "string" ? user.id : String(user._id ?? "")
+    return toAdminUser(user, plans.get(id) ?? "free")
+  })
 }
 
 interface UpdateRoleInput {
@@ -88,8 +118,8 @@ interface UpdateRoleInput {
 }
 
 /**
- * Updates only the role field. Preserves all other user data and prevents
- * self-demotion or removal of the final admin account.
+ * Updates role via Better Auth Admin Plugin API. Preserves self-demotion and
+ * last-admin protections before delegating the role change.
  */
 export async function updateUserRole(input: UpdateRoleInput): Promise<AdminUser> {
   const targetId = toObjectId(input.targetUserId)
@@ -106,7 +136,7 @@ export async function updateUserRole(input: UpdateRoleInput): Promise<AdminUser>
 
   const currentRole = normalizeRole(target.role)
   if (currentRole === input.nextRole) {
-    return toAdminUser(target)
+    return toAdminUser(target as BetterAuthUserLike, target.plan === "pro" ? "pro" : "free")
   }
 
   const isSelf = String(targetId) === input.actingAdminId
@@ -121,28 +151,21 @@ export async function updateUserRole(input: UpdateRoleInput): Promise<AdminUser>
     }
   }
 
-  const result = await users.findOneAndUpdate(
-    { _id: targetId },
-    { $set: { role: input.nextRole, updatedAt: new Date() } },
-    {
-      returnDocument: "after",
-      projection: {
-        _id: 1,
-        name: 1,
-        email: 1,
-        role: 1,
-        plan: 1,
-        createdAt: 1,
-      },
-    }
-  )
+  const requestHeaders = await headers()
+  const result = await auth.api.setRole({
+    headers: requestHeaders,
+    body: {
+      userId: input.targetUserId,
+      role: input.nextRole as unknown as "user",
+    },
+  })
 
-  const updated = updatedDocument(result)
+  const updated = (result?.user ?? null) as unknown as BetterAuthUserLike | null
   if (!updated) throw new AdminUserError(404, "User not found.")
 
   if (normalizeRole(updated.role) !== input.nextRole) {
     throw new Error("Failed to update the user role.")
   }
 
-  return toAdminUser(updated)
+  return toAdminUser(updated, target.plan === "pro" ? "pro" : "free")
 }
