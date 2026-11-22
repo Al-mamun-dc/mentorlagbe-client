@@ -98,7 +98,7 @@ export function Footer() {
     <footer
       className={cn(
         "px-3 pt-8 pb-3 sm:px-5 sm:pb-5",
-        isDashboard ? "md:ml-64" : "ml-0"
+        isDashboard ? "md:ml-[var(--sidebar-offset,16rem)]" : "ml-0"
       )}
     >
       <div className="relative mx-auto w-full max-w-7xl overflow-hidden rounded-3xl border border-white/10 bg-charcoal text-zinc-300 shadow-2xl shadow-black/30">

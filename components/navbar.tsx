@@ -225,10 +225,10 @@ export function Navbar() {
   return (
     <header
       className={cn(
-        "fixed top-0 z-40 transition-all duration-300",
+        "fixed top-0 z-40 duration-300",
         pathname.startsWith("/dashboard")
-          ? "left-64 w-[calc(100%-16rem)]"
-          : "inset-x-0",
+          ? "left-[var(--sidebar-offset,16rem)] w-[calc(100%-var(--sidebar-offset,16rem))] transition-[padding]"
+          : "inset-x-0 transition-all",
         scrolled ? "pt-2" : "pt-3 sm:pt-4"
       )}
     >

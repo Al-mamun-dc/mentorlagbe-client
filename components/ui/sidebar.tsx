@@ -93,6 +93,8 @@ function SidebarProvider({
     return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open)
   }, [isMobile, setOpen, setOpenMobile])
 
+  const wrapperRef = React.useRef<HTMLDivElement>(null)
+
   // Adds a keyboard shortcut to toggle the sidebar.
   React.useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -108,6 +110,30 @@ function SidebarProvider({
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [toggleSidebar])
+
+  // Expose the current sidebar gap width for layout chrome outside the provider.
+  React.useEffect(() => {
+    const wrapper = wrapperRef.current
+    if (!wrapper) return
+    const gap = wrapper.querySelector<HTMLElement>('[data-slot="sidebar-gap"]')
+    if (!gap) {
+      document.documentElement.style.setProperty("--sidebar-offset", "0rem")
+      return
+    }
+
+    const update = () => {
+      const width = isMobile ? "0rem" : `${gap.getBoundingClientRect().width}px`
+      document.documentElement.style.setProperty("--sidebar-offset", width)
+    }
+
+    update()
+    const observer = new ResizeObserver(update)
+    observer.observe(gap)
+    return () => {
+      observer.disconnect()
+      document.documentElement.style.removeProperty("--sidebar-offset")
+    }
+  }, [isMobile, open])
 
   // We add a state so that we can do data-state="expanded" or "collapsed".
   // This makes it easier to style the sidebar with Tailwind classes.
@@ -129,6 +155,7 @@ function SidebarProvider({
   return (
     <SidebarContext.Provider value={contextValue}>
       <div
+        ref={wrapperRef}
         data-slot="sidebar-wrapper"
         style={
           {
