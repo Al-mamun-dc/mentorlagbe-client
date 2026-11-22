@@ -1,11 +1,21 @@
-import React from 'react';
+import { redirect } from "next/navigation"
 
-const AdminDashboardPage = () => {
-    return (
-        <div>
-            <h2>Admin dashboard</h2>
-        </div>
-    );
-};
+import { getSessionUser } from "@/lib/admin-auth"
 
-export default AdminDashboardPage;
+import AdminOverview from "./admin-overview"
+
+export const runtime = "nodejs"
+
+export default async function AdminDashboardPage() {
+  const user = await getSessionUser()
+
+  if (!user) {
+    redirect("/sign-in")
+  }
+
+  if (user.role !== "admin") {
+    redirect("/")
+  }
+
+  return <AdminOverview />
+}

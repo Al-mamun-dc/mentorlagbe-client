@@ -10,14 +10,13 @@ import {
   Lock,
   Mail,
   Presentation,
-  ShieldCheck,
   UserRound,
 } from "lucide-react"
 
 import { BrandMark, BrandWordmark } from "@/components/navbar"
 import { authClient } from "@/lib/auth-client"
 
-type Role = "student" | "tutor" | "admin"
+type Role = "student" | "tutor"
 
 interface SignUpForm {
   fullName: string
@@ -30,7 +29,6 @@ interface SignUpForm {
 const ROLES = [
   { value: "student", label: "Student", icon: GraduationCap },
   { value: "tutor", label: "Tutor", icon: Presentation },
-  { value: "admin", label: "Admin", icon: ShieldCheck },
 ] as const
 
 export default function SignUpPage() {
@@ -247,7 +245,7 @@ export default function SignUpPage() {
               <legend className="text-sm font-medium text-zinc-200">
                 I am a
               </legend>
-              <div className="mt-2 grid grid-cols-3 gap-2">
+              <div className="mt-2 grid grid-cols-2 gap-2">
                 {ROLES.map(({ value, label, icon: Icon }) => {
                   const selected = form.role === value
 
@@ -280,6 +278,9 @@ export default function SignUpPage() {
                 })}
               </div>
             </fieldset>
+            <p className="text-xs text-zinc-500">
+              Admin accounts are assigned by an existing administrator.
+            </p>
 
             {error && (
               <p

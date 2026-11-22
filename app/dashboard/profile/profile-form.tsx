@@ -47,6 +47,32 @@ interface ImgbbResponse {
 const controlClass =
   "flex h-10 w-full rounded-xl border border-white/10 bg-ink-950/60 px-3 text-sm text-white placeholder:text-zinc-600 transition-colors focus:border-brand-500/60 focus:ring-2 focus:ring-brand-500/25 focus:outline-none aria-[invalid=true]:border-red-500/60"
 
+/* Stable IDs make repeated notifications update in place instead of stacking. */
+const TOAST_IDS = {
+  success: "profile-update-success",
+  saveError: "profile-update-error",
+  uploadError: "profile-image-upload-error",
+} as const
+
+function notifyUploadError(message: string) {
+  toast.add({
+    id: TOAST_IDS.uploadError,
+    type: "error",
+    title: "Upload Failed",
+    description: message,
+  })
+}
+
+function notifySaveError(message: string) {
+  toast.close(TOAST_IDS.success)
+  toast.add({
+    id: TOAST_IDS.saveError,
+    type: "error",
+    title: "Error",
+    description: message,
+  })
+}
+
 function Field({
   label,
   htmlFor,
@@ -100,11 +126,8 @@ export default function ProfileForm({
   })
   const [errors, setErrors] = useState<FormErrors>({})
   const [localPreview, setLocalPreview] = useState("")
-  const [uploadError, setUploadError] = useState("")
   const [isUploading, setIsUploading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [statusMessage, setStatusMessage] = useState("")
-  const [statusError, setStatusError] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const objectUrlRef = useRef<string | null>(null)
@@ -123,24 +146,18 @@ export default function ProfileForm({
     const { name, value } = event.target
     setForm((current) => ({ ...current, [name]: value }))
     setErrors((current) => ({ ...current, [name]: undefined }))
-    setStatusMessage("")
-    setStatusError(false)
   }
 
   async function handleImageChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
     if (!file) return
 
-    setUploadError("")
-    setStatusMessage("")
-    setStatusError(false)
-
     if (!file.type.startsWith("image/")) {
-      setUploadError("Please choose an image file.")
+      notifyUploadError("Please choose an image file.")
       return
     }
     if (file.size > 5 * 1024 * 1024) {
-      setUploadError("Image must be smaller than 5 MB.")
+      notifyUploadError("Image must be smaller than 5 MB.")
       return
     }
 
@@ -159,7 +176,7 @@ export default function ProfileForm({
         objectUrlRef.current = null
       }
       setLocalPreview("")
-      setUploadError(
+      notifyUploadError(
         "ImgBB API key is not configured. Set NEXT_PUBLIC_IMGBB_API_KEY in .env and restart the dev server."
       )
       return
@@ -204,6 +221,7 @@ export default function ProfileForm({
         objectUrlRef.current = null
       }
       setLocalPreview("")
+      toast.close(TOAST_IDS.uploadError)
       setForm((current) => ({ ...current, image: uploadedUrl }))
       setErrors((current) => ({ ...current, image: undefined }))
     } catch (error) {
@@ -213,7 +231,7 @@ export default function ProfileForm({
         objectUrlRef.current = null
       }
       setLocalPreview("")
-      setUploadError(
+      notifyUploadError(
         error instanceof Error
           ? error.message
           : "Image upload failed. Please try again."
@@ -230,7 +248,6 @@ export default function ProfileForm({
     }
     if (fileInputRef.current) fileInputRef.current.value = ""
     setLocalPreview("")
-    setUploadError("")
     setForm((current) => ({ ...current, image: "" }))
     setErrors((current) => ({ ...current, image: undefined }))
   }
@@ -271,10 +288,9 @@ export default function ProfileForm({
     event.preventDefault()
     const nextErrors = validateForm()
     setErrors(nextErrors)
-    setStatusMessage("")
-    setStatusError(false)
     if (Object.keys(nextErrors).length > 0) return
 
+    let apiErrorMessage = ""
     setIsSaving(true)
     try {
       const response = await fetch("/api/user/profile", {
@@ -292,9 +308,12 @@ export default function ProfileForm({
       }
 
       if (!response.ok || !result.profile) {
-        throw new Error(
-          result.error || `Failed to save profile. (HTTP ${response.status})`
-        )
+        /* Validation failures carry a specific message from the API. */
+        apiErrorMessage =
+          response.status === 400 && result.error
+            ? result.error
+            : "Failed to update profile. Please try again."
+        throw new Error(apiErrorMessage)
       }
 
       setForm({
@@ -303,18 +322,18 @@ export default function ProfileForm({
         bio: result.profile.bio,
         image: result.profile.image,
       })
-      setStatusMessage("Profile updated successfully.")
+      toast.close(TOAST_IDS.saveError)
       toast.add({
+        id: TOAST_IDS.success,
+        type: "success",
         title: "Success",
-        description: "Your profile has been updated.",
+        description: "Profile updated successfully!",
       })
       router.refresh()
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to save profile."
-      setStatusError(true)
-      setStatusMessage(message)
-      toast.add({ title: "Error", description: message })
+    } catch {
+      notifySaveError(
+        apiErrorMessage || "Failed to update profile. Please try again."
+      )
     } finally {
       setIsSaving(false)
     }
@@ -415,12 +434,7 @@ export default function ProfileForm({
               />
             </Field>
 
-            {uploadError ? (
-              <p role="alert" className="text-xs text-red-400">
-                {uploadError}
-              </p>
-            ) : null}
-            {!uploadError && form.image && !localPreview ? (
+            {form.image && !localPreview ? (
               <p className="flex items-center gap-1.5 text-xs text-brand-300">
                 <CircleCheck className="size-3.5" aria-hidden />
                 Image ready to save
@@ -500,24 +514,10 @@ export default function ProfileForm({
       </div>
 
       <div className="flex flex-col gap-4 border-t border-white/10 pt-8 sm:flex-row sm:items-center sm:justify-between">
-        {statusMessage ? (
-          <p
-            role={statusError ? "alert" : "status"}
-            className={`flex items-center gap-2 rounded-xl border px-4 py-3 text-sm ${
-              statusError
-                ? "border-red-500/30 bg-red-500/10 text-red-300"
-                : "border-brand-500/30 bg-brand-500/10 text-brand-300"
-            }`}
-          >
-            <Info className="size-4 shrink-0" aria-hidden />
-            {statusMessage}
-          </p>
-        ) : (
-          <p className="text-xs text-zinc-500">
-            Only you can update your profile. Your email, role and plan stay
-            unchanged.
-          </p>
-        )}
+        <p className="text-xs text-zinc-500">
+          Only you can update your profile. Your email, role and plan stay
+          unchanged.
+        </p>
 
         <Button
           type="submit"
