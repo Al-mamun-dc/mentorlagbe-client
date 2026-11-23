@@ -32,7 +32,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Home", href: "/", icon: House },
   { label: "Browse Tuitions", href: "/tuitions", icon: BookOpen },
   { label: "Pricing / Pro Plans", href: "/pricing", icon: Crown },
-  { label: "How It Works", href: "/About", icon: Info },
+  { label: "How It Works", href: "/how-it-works", icon: Info },
 ]
 /* --------------------------------- Brand --------------------------------- */
 

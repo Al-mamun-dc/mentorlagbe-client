@@ -62,7 +62,7 @@ const QUICK_LINKS = [
   { label: "Home", href: "/" },
   { label: "Browse Tuitions", href: "/tuitions" },
   { label: "Pricing / Pro Plans", href: "/pricing" },
-  { label: "How It Works", href: "/about" },
+  { label: "How It Works", href: "/how-it-works" },
 ];
 
 interface SocialLink {
