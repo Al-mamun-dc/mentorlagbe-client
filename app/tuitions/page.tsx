@@ -14,6 +14,7 @@ import {
 import { getAllTuitions } from "@/lib/api/tution"
 import { SectionHeading, SectionShell } from "@/components/sections/shared"
 import { TuitionFilters, type TuitionFiltersValue } from "./tuition-filters"
+import { BookmarkButton } from "@/components/bookmark-button"
 
 export const metadata = {
   title: "Browse Tuitions | MentorLagbe",
@@ -177,12 +178,15 @@ function TuitionCard({ tuition }: { tuition: Tuition }) {
       <p className="mt-auto line-clamp-2 pt-5 text-sm leading-relaxed text-zinc-400">
         {tuition.description || "No description was provided for this tuition."}
       </p>
-      <Link
-        href={`/tuitions/${tuition.id}`}
-        className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-xl border border-brand-500/40 bg-brand-500/10 text-sm font-medium text-brand-300 transition-all duration-300 hover:bg-brand-500 hover:text-white focus-visible:ring-2 focus-visible:ring-brand-400/60 focus-visible:outline-none"
-      >
-        View Details
-      </Link>
+      <div className="mt-4 flex items-center gap-2">
+        <BookmarkButton tuitionId={tuition.id} iconOnly onDark />
+        <Link
+          href={`/tuitions/${tuition.id}`}
+          className="inline-flex h-10 min-w-0 flex-1 items-center justify-center rounded-xl border border-brand-500/40 bg-brand-500/10 text-sm font-medium text-brand-300 transition-all duration-300 hover:bg-brand-500 hover:text-white focus-visible:ring-2 focus-visible:ring-brand-400/60 focus-visible:outline-none"
+        >
+          View Details
+        </Link>
+      </div>
     </article>
   )
 }

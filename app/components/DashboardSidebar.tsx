@@ -17,6 +17,7 @@ import { useSession } from "@/lib/auth-client"
 import {
   LayoutDashboard,
   BookOpen,
+  Bookmark,
   User,
   Users,
   PlusCircle,
@@ -40,6 +41,11 @@ const menuItemByRole = {
       name: "My Applications",
       url: "/dashboard/student/my-applications",
       icon: BookOpen,
+    },
+    {
+      name: "My Bookmarks",
+      url: "/dashboard/student/bookmarks",
+      icon: Bookmark,
     },
     {
       name: "Update Profile",

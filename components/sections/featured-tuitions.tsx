@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 
 import { SectionHeading, SectionShell } from "./shared"
+import { BookmarkButton } from "@/components/bookmark-button"
 
 interface Tuition {
   _id: string
@@ -111,12 +112,15 @@ export function FeaturedTuitions() {
                     </span>
                   </div>
 
-                  <Link
-                    href={`/tuitions/${tuition._id}`}
-                    className="inline-flex h-10 w-full items-center justify-center rounded-xl border border-brand-500/40 bg-brand-500/10 text-sm font-medium text-brand-300 transition-all hover:bg-brand-500 hover:text-white"
-                  >
-                    View Details
-                  </Link>
+                  <div className="flex items-center gap-2">
+                    <BookmarkButton tuitionId={tuition._id} iconOnly onDark />
+                    <Link
+                      href={`/tuitions/${tuition._id}`}
+                      className="inline-flex h-10 min-w-0 flex-1 items-center justify-center rounded-xl border border-brand-500/40 bg-brand-500/10 text-sm font-medium text-brand-300 transition-all hover:bg-brand-500 hover:text-white"
+                    >
+                      View Details
+                    </Link>
+                  </div>
                 </div>
               </article>
             ))}

@@ -16,6 +16,7 @@ import {
 import { getTuitionById, type TuitionDetails } from "@/lib/api/tution"
 import { SectionHeading, SectionShell } from "@/components/sections/shared"
 import { ApplyTuitionCard } from "./apply-tuition"
+import { BookmarkButton } from "@/components/bookmark-button"
 
 export const metadata = {
   title: "Tuition Details | MentorLagbe",
@@ -220,9 +221,12 @@ export default async function TuitionDetailsPage({
             </div>
 
             <aside className="h-fit rounded-2xl border border-white/10 bg-ink-900/70 p-6 lg:sticky lg:top-28">
-              <h2 className="text-sm font-semibold tracking-wide text-zinc-400 uppercase">
-                Tuition summary
-              </h2>
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-sm font-semibold tracking-wide text-zinc-400 uppercase">
+                  Tuition summary
+                </h2>
+                <BookmarkButton tuitionId={details.id} iconOnly onDark />
+              </div>
 
               <div className="mt-5 rounded-xl border border-brand-500/25 bg-brand-500/10 p-5">
                 <p className="flex items-center gap-1.5 text-xs text-brand-300">
