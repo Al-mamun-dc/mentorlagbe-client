@@ -1,13 +1,14 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useState, type ChangeEvent, type FormEvent } from "react"
 import {
   ArrowRight,
   BookOpen,
-  Check,
   Eye,
   EyeOff,
+  LoaderCircle,
   Lock,
   Mail,
   ShieldCheck,
@@ -17,6 +18,7 @@ import {
 
 import { BrandMark, BrandWordmark } from "@/components/navbar"
 import { authClient } from "@/lib/auth-client"
+import { toast } from "@/components/ui/toast"
 
 interface SignInForm {
   email: string
@@ -47,38 +49,41 @@ const HIGHLIGHTS = [
 ]
 
 export default function SignInPage() {
+  const router = useRouter()
   const [form, setForm] = useState<SignInForm>(INITIAL_FORM)
   const [showPassword, setShowPassword] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
 
   function handleChange(event: ChangeEvent<HTMLInputElement>) {
     const { name, value } = event.target
     setForm((current) => ({ ...current, [name]: value }))
-    setSubmitted(false)
+    setError("")
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (isLoading) return
+    setError("")
+    setIsLoading(true)
 
-    // Demo only — the data is collected here until auth is integrated.
-    console.log("Sign in form data:", form)
-    setSubmitted(true)
+    const { error: signInError } = await authClient.signIn.email({
+      email: form.email,
+      password: form.password,
+      rememberMe: true,
+    })
+
+    if (signInError) {
+      const message = signInError.message ?? "Could not sign in. Please try again."
+      setError(message)
+      setIsLoading(false)
+      return
+    }
+
+    toast.add({ type: "success", title: "Signed in", description: "Welcome back!" })
+    router.push("/")
+    router.refresh()
   }
-  const handleSignIn = async () => {
-  const { data, error } = await authClient.signIn.email({
-    email: form.email,
-    password: form.password,
-    rememberMe: true,
-    callbackURL: "/",
-  })
-
-  if (error) {
-    console.log(error.message)
-    return
-  }
-
-  console.log("Login successful:", data)
-}
 
   return (
     <section className="flex min-h-[calc(100vh-16rem)] items-center justify-center px-3 py-8 sm:px-5 sm:py-12">
@@ -224,26 +229,34 @@ export default function SignInPage() {
               </div>
             </div>
 
-            {submitted && (
+            {error ? (
               <p
-                role="status"
-                className="flex items-center gap-2 rounded-xl border border-brand-500/30 bg-brand-500/10 px-3.5 py-3 text-sm text-brand-300"
+                role="alert"
+                className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3.5 py-3 text-sm text-rose-300"
               >
-                <Check className="size-4 shrink-0" aria-hidden />
-                Demo mode — your form data was collected.
+                {error}
               </p>
-            )}
+            ) : null}
 
             <button
               type="submit"
-              onClick={handleSignIn}
-              className="btn-shine group inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-500 text-[15px] font-medium text-white shadow-lg shadow-brand-500/35 transition-all select-none hover:bg-brand-400 hover:shadow-xl hover:shadow-brand-500/45 active:translate-y-px focus-visible:ring-2 focus-visible:ring-brand-400/60 focus-visible:outline-none"
+              disabled={isLoading}
+              className="btn-shine group inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-500 text-[15px] font-medium text-white shadow-lg shadow-brand-500/35 transition-all select-none hover:bg-brand-400 hover:shadow-xl hover:shadow-brand-500/45 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60 focus-visible:ring-2 focus-visible:ring-brand-400/60 focus-visible:outline-none"
             >
-              Sign In
-              <ArrowRight
-                className="size-4 transition-transform duration-300 group-hover:translate-x-1"
-                aria-hidden
-              />
+              {isLoading ? (
+                <>
+                  <LoaderCircle className="size-4 animate-spin" aria-hidden />
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  Sign In
+                  <ArrowRight
+                    className="size-4 transition-transform duration-300 group-hover:translate-x-1"
+                    aria-hidden
+                  />
+                </>
+              )}
             </button>
           </form>
 

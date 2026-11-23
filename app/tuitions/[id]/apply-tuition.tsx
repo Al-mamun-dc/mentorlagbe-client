@@ -7,6 +7,7 @@ import { CheckCircle2, Info, LoaderCircle, Send } from "lucide-react"
 import { applyToTuition } from "@/lib/api/tution"
 import { useSession } from "@/lib/auth-client"
 import { Button } from "@/components/ui/button"
+import { toast } from "@/components/ui/toast"
 import {
   Dialog,
   DialogContent,
@@ -72,6 +73,7 @@ export function ApplyTuitionCard({
 
       setDialogOpen(false)
       setSuccessMessage("Application submitted successfully. Your application is now pending review.")
+      toast.add({ type: "success", title: "Application submitted", description: "Your application is now pending review." })
     } catch (error) {
       setFormError(error instanceof Error ? error.message : "Failed to submit application.")
     } finally {

@@ -7,6 +7,7 @@ import { Eye, EyeOff, Lock, Mail, UserRound } from "lucide-react"
 
 import { BrandMark, BrandWordmark } from "@/components/navbar"
 import { authClient } from "@/lib/auth-client"
+import { toast } from "@/components/ui/toast"
 
 interface SignUpForm {
   fullName: string
@@ -66,6 +67,7 @@ export default function SignUpPage() {
       return
     }
 
+    toast.add({ type: "success", title: "Account created", description: "Welcome to MentorLagbe!" })
     router.push("/")
     router.refresh()
   }

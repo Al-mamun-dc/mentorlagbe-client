@@ -325,10 +325,9 @@ export default function PostTuitionPage() {
   try {
     await posttution(form)
 
-    setStatusMessage("Tuition posted successfully!")
-
     toast.add({
-      title: "Success",
+      type: "success",
+      title: "Tuition posted",
       description: "Tuition posted successfully!",
     })
 
@@ -336,10 +335,8 @@ export default function PostTuitionPage() {
     const message =
       error instanceof Error ? error.message : "Failed to post tuition."
 
-    setStatusError(true)
-    setStatusMessage(message)
-
     toast.add({
+      type: "error",
       title: "Error",
       description: message,
     })

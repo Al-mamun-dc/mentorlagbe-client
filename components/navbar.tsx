@@ -19,6 +19,7 @@ import {
 } from "lucide-react"
 
 import { cn } from "cn"
+import { toast } from "@/components/ui/toast"
 
 /* ------------------------------- Nav links ------------------------------- */
 
@@ -159,10 +160,12 @@ export function Navbar() {
       setUserMenuOpen(false)
       setMobileOpen(false)
 
+      toast.add({ type: "success", title: "Signed out", description: "You have been signed out successfully." })
       router.push("/")
       router.refresh()
     } catch (error) {
       console.error("Sign out failed:", error)
+      toast.add({ type: "error", title: "Sign out failed", description: "Could not sign out. Please try again." })
     }
   }
 
