@@ -1,3 +1,5 @@
+import { getAuthToken } from "@/lib/api/auth-token"
+
 interface TuitionFormState {
   title: string;
   subject: string;
@@ -16,8 +18,31 @@ interface PostTuitionError {
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000"
 
+async function authHeaders(): Promise<Record<string, string>> {
+  if (typeof window === "undefined") return {}
+  const token = await getAuthToken()
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
+async function fetchWithAuth(input: string, init: RequestInit = {}): Promise<Response> {
+  const headers = new Headers(init.headers)
+  const tokenHeaders = await authHeaders()
+  for (const [key, value] of Object.entries(tokenHeaders)) {
+    if (!headers.has(key)) headers.set(key, value)
+  }
+  const response = await fetch(input, { ...init, headers })
+  if (response.status === 401 && typeof window !== "undefined") {
+    await getAuthToken(true)
+    const retryHeaders = new Headers(init.headers)
+    const fresh = await authHeaders()
+    for (const [key, value] of Object.entries(fresh)) retryHeaders.set(key, value)
+    return fetch(input, { ...init, headers: retryHeaders })
+  }
+  return response
+}
+
 export const posttution = async (data: TuitionFormState) => {
-  const res = await fetch(`${BASE_URL}/tution-post`, {
+  const res = await fetchWithAuth(`${BASE_URL}/tution-post`, {
     method: "POST",
     credentials: "include",
     headers: {
@@ -35,7 +60,7 @@ export const posttution = async (data: TuitionFormState) => {
   return result
 }
 export const deleteTution = async (id: string) => {
-  const res = await fetch(`${BASE_URL}/tution-post/${id}`, {
+  const res = await fetchWithAuth(`${BASE_URL}/tution-post/${id}`, {
     method: "DELETE",
     credentials: "include",
   })
@@ -62,7 +87,7 @@ export const updateTution = async (
   id: string,
   data: TuitionFormState
 ) => {
-  const res = await fetch(`${BASE_URL}/tution-post/${id}`, {
+  const res = await fetchWithAuth(`${BASE_URL}/tution-post/${id}`, {
     method: "PATCH",
     credentials: "include",
     headers: {

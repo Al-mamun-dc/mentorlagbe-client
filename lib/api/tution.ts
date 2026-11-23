@@ -1,13 +1,47 @@
+import { getAuthToken } from "@/lib/api/auth-token"
+
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000"
 
 interface ApiError {
   error?: string
 }
 
+async function authHeaders(): Promise<Record<string, string>> {
+  if (typeof window === "undefined") return {}
+  const token = await getAuthToken()
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
+async function fetchWithAuth(
+  input: string,
+  init: RequestInit = {},
+  canRetry = true
+): Promise<Response> {
+  const headers = new Headers(init.headers)
+  const tokenHeaders = await authHeaders()
+  for (const [key, value] of Object.entries(tokenHeaders)) {
+    if (!headers.has(key)) headers.set(key, value)
+  }
+
+  const response = await fetch(input, { ...init, headers })
+  if (response.status !== 401 || !canRetry || typeof window === "undefined") {
+    return response
+  }
+
+  // Retry once with a fresh JWT; cookie fallback remains via credentials: "include".
+  await getAuthToken(true)
+  const retryHeaders = new Headers(init.headers)
+  const fresh = await authHeaders()
+  for (const [key, value] of Object.entries(fresh)) {
+    retryHeaders.set(key, value)
+  }
+  return fetch(input, { ...init, headers: retryHeaders })
+}
+
 /** Public browse query; the page builds the query string from its URL params. */
 export const getAllTuitions = async (query = "") => {
   const suffix = query ? `?${query}` : ""
-  const res = await fetch(`${BASE_URL}/tution-post${suffix}`, {
+  const res = await fetchWithAuth(`${BASE_URL}/tution-post${suffix}`, {
     cache: "no-store",
   })
 
@@ -53,7 +87,7 @@ export interface TuitionDetails {
 
 /** Public single-tuition fetch. Returns null for invalid, missing, or unavailable posts. */
 export const getTuitionById = async (id: string): Promise<TuitionDetails | null> => {
-  const res = await fetch(`${BASE_URL}/tution-post/${encodeURIComponent(id)}`, {
+  const res = await fetchWithAuth(`${BASE_URL}/tution-post/${encodeURIComponent(id)}`, {
     cache: "no-store",
   })
 
@@ -101,7 +135,7 @@ export const applyToTuition = async (
   tuitionId: string,
   payload: TuitionApplicationPayload
 ): Promise<TuitionApplicationResult> => {
-  const res = await fetch(`${BASE_URL}/tution-post/${encodeURIComponent(tuitionId)}/apply`, {
+  const res = await fetchWithAuth(`${BASE_URL}/tution-post/${encodeURIComponent(tuitionId)}/apply`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
@@ -151,7 +185,7 @@ export interface MyApplicationsResponse {
 
 /** Returns only the authenticated student's applications. */
 export const getMyApplications = async (): Promise<MyApplicationsResponse> => {
-  const res = await fetch(`${BASE_URL}/application/my`, {
+  const res = await fetchWithAuth(`${BASE_URL}/application/my`, {
     credentials: "include",
     cache: "no-store",
   })
@@ -180,7 +214,7 @@ export const getMyApplications = async (): Promise<MyApplicationsResponse> => {
 
 /** Cancels an application only if it belongs to the student and is still pending. */
 export const deleteApplication = async (applicationId: string): Promise<void> => {
-  const res = await fetch(
+  const res = await fetchWithAuth(
     `${BASE_URL}/application/${encodeURIComponent(applicationId)}`,
     {
       method: "DELETE",
@@ -206,7 +240,7 @@ export const deleteApplication = async (applicationId: string): Promise<void> =>
 
 export const gettution = async (query = "") => {
   const suffix = query ? `?${query}` : ""
-  const res = await fetch(`${BASE_URL}/tution-post/my${suffix}`, {
+  const res = await fetchWithAuth(`${BASE_URL}/tution-post/my${suffix}`, {
     credentials: "include",
     cache: "no-store",
   })
