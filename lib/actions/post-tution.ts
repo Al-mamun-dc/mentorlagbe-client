@@ -1,4 +1,5 @@
 import { getAuthToken } from "@/lib/api/auth-token"
+import { API_BASE_URL } from "@/lib/api/base-url"
 
 interface TuitionFormState {
   title: string;
@@ -16,7 +17,7 @@ interface PostTuitionError {
   error?: string;
 }
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000"
+// Uses centralized Express backend base URL.
 
 async function authHeaders(): Promise<Record<string, string>> {
   if (typeof window === "undefined") return {}
@@ -42,7 +43,7 @@ async function fetchWithAuth(input: string, init: RequestInit = {}): Promise<Res
 }
 
 export const posttution = async (data: TuitionFormState) => {
-  const res = await fetchWithAuth(`${BASE_URL}/tution-post`, {
+  const res = await fetchWithAuth(`${API_BASE_URL}/tution-post`, {
     method: "POST",
     credentials: "include",
     headers: {
@@ -60,7 +61,7 @@ export const posttution = async (data: TuitionFormState) => {
   return result
 }
 export const deleteTution = async (id: string) => {
-  const res = await fetchWithAuth(`${BASE_URL}/tution-post/${id}`, {
+  const res = await fetchWithAuth(`${API_BASE_URL}/tution-post/${id}`, {
     method: "DELETE",
     credentials: "include",
   })
@@ -87,7 +88,7 @@ export const updateTution = async (
   id: string,
   data: TuitionFormState
 ) => {
-  const res = await fetchWithAuth(`${BASE_URL}/tution-post/${id}`, {
+  const res = await fetchWithAuth(`${API_BASE_URL}/tution-post/${id}`, {
     method: "PATCH",
     credentials: "include",
     headers: {

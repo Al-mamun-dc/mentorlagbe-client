@@ -215,11 +215,7 @@ If the project uses nodemon, you can run:
 npm run dev
 ```
 
-Backend runs at:
-
-```text
-http://localhost:8000
-```
+Backend runs at the URL configured by `NEXT_PUBLIC_API_BASE_URL` (local default: `http://localhost:4000`).
 
 > Important: Use the actual environment variable names and scripts from your project configuration. Never commit `.env` or `.env.local` files to GitHub.
 

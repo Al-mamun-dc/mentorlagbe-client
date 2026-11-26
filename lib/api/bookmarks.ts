@@ -1,6 +1,5 @@
 import { getAuthToken } from "@/lib/api/auth-token"
-
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000"
+import { API_BASE_URL } from "@/lib/api/base-url"
 
 interface ApiError {
   error?: string
@@ -61,7 +60,7 @@ export interface BookmarkItem {
 }
 
 export async function getBookmarkIds(): Promise<string[]> {
-  const res = await fetchWithAuth(`${BASE_URL}/bookmarks/ids`, {
+  const res = await fetchWithAuth(`${API_BASE_URL}/bookmarks/ids`, {
     credentials: "include",
     cache: "no-store",
   })
@@ -71,7 +70,7 @@ export async function getBookmarkIds(): Promise<string[]> {
 }
 
 export async function getMyBookmarks(): Promise<BookmarkItem[]> {
-  const res = await fetchWithAuth(`${BASE_URL}/bookmarks/my`, {
+  const res = await fetchWithAuth(`${API_BASE_URL}/bookmarks/my`, {
     credentials: "include",
     cache: "no-store",
   })
@@ -81,7 +80,7 @@ export async function getMyBookmarks(): Promise<BookmarkItem[]> {
 }
 
 export async function addBookmark(tuitionId: string): Promise<void> {
-  const res = await fetchWithAuth(`${BASE_URL}/bookmarks/${encodeURIComponent(tuitionId)}`, {
+  const res = await fetchWithAuth(`${API_BASE_URL}/bookmarks/${encodeURIComponent(tuitionId)}`, {
     method: "POST",
     credentials: "include",
     cache: "no-store",
@@ -92,7 +91,7 @@ export async function addBookmark(tuitionId: string): Promise<void> {
 }
 
 export async function removeBookmark(tuitionId: string): Promise<void> {
-  const res = await fetchWithAuth(`${BASE_URL}/bookmarks/${encodeURIComponent(tuitionId)}`, {
+  const res = await fetchWithAuth(`${API_BASE_URL}/bookmarks/${encodeURIComponent(tuitionId)}`, {
     method: "DELETE",
     credentials: "include",
     cache: "no-store",

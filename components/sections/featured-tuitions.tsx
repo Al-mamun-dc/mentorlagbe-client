@@ -13,6 +13,7 @@ import {
 
 import { SectionHeading, SectionShell } from "./shared"
 import { BookmarkButton } from "@/components/bookmark-button"
+import { API_BASE_URL } from "@/lib/api/base-url"
 
 interface Tuition {
   _id: string
@@ -28,7 +29,7 @@ export function FeaturedTuitions() {
   const [tuitions, setTuitions] = useState<Tuition[]>([])
 
   useEffect(() => {
-    fetch("http://localhost:4000/tution-post")
+    fetch(`${API_BASE_URL}/tution-post`)
       .then(res => res.json())
       .then(data => setTuitions(data.slice(0, 6)))
       .catch(console.error)

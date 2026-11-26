@@ -1,6 +1,5 @@
 import { getAuthToken } from "@/lib/api/auth-token"
-
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000"
+import { API_BASE_URL } from "@/lib/api/base-url"
 
 interface ApiError {
   error?: string
@@ -41,7 +40,7 @@ async function fetchWithAuth(
 /** Public browse query; the page builds the query string from its URL params. */
 export const getAllTuitions = async (query = "") => {
   const suffix = query ? `?${query}` : ""
-  const res = await fetchWithAuth(`${BASE_URL}/tution-post${suffix}`, {
+  const res = await fetchWithAuth(`${API_BASE_URL}/tution-post${suffix}`, {
     cache: "no-store",
   })
 
@@ -87,7 +86,7 @@ export interface TuitionDetails {
 
 /** Public single-tuition fetch. Returns null for invalid, missing, or unavailable posts. */
 export const getTuitionById = async (id: string): Promise<TuitionDetails | null> => {
-  const res = await fetchWithAuth(`${BASE_URL}/tution-post/${encodeURIComponent(id)}`, {
+  const res = await fetchWithAuth(`${API_BASE_URL}/tution-post/${encodeURIComponent(id)}`, {
     cache: "no-store",
   })
 
@@ -135,7 +134,7 @@ export const applyToTuition = async (
   tuitionId: string,
   payload: TuitionApplicationPayload
 ): Promise<TuitionApplicationResult> => {
-  const res = await fetchWithAuth(`${BASE_URL}/tution-post/${encodeURIComponent(tuitionId)}/apply`, {
+  const res = await fetchWithAuth(`${API_BASE_URL}/tution-post/${encodeURIComponent(tuitionId)}/apply`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
@@ -185,7 +184,7 @@ export interface MyApplicationsResponse {
 
 /** Returns only the authenticated student's applications. */
 export const getMyApplications = async (): Promise<MyApplicationsResponse> => {
-  const res = await fetchWithAuth(`${BASE_URL}/application/my`, {
+  const res = await fetchWithAuth(`${API_BASE_URL}/application/my`, {
     credentials: "include",
     cache: "no-store",
   })
@@ -215,7 +214,7 @@ export const getMyApplications = async (): Promise<MyApplicationsResponse> => {
 /** Cancels an application only if it belongs to the student and is still pending. */
 export const deleteApplication = async (applicationId: string): Promise<void> => {
   const res = await fetchWithAuth(
-    `${BASE_URL}/application/${encodeURIComponent(applicationId)}`,
+    `${API_BASE_URL}/application/${encodeURIComponent(applicationId)}`,
     {
       method: "DELETE",
       credentials: "include",
@@ -240,7 +239,7 @@ export const deleteApplication = async (applicationId: string): Promise<void> =>
 
 export const gettution = async (query = "") => {
   const suffix = query ? `?${query}` : ""
-  const res = await fetchWithAuth(`${BASE_URL}/tution-post/my${suffix}`, {
+  const res = await fetchWithAuth(`${API_BASE_URL}/tution-post/my${suffix}`, {
     credentials: "include",
     cache: "no-store",
   })

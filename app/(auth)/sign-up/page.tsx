@@ -3,17 +3,20 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState, type ChangeEvent, type FormEvent } from "react"
-import { Eye, EyeOff, Lock, Mail, UserRound } from "lucide-react"
+import { BookOpen, Eye, EyeOff, GraduationCap, Lock, Mail, UserRound } from "lucide-react"
 
 import { BrandMark, BrandWordmark } from "@/components/navbar"
 import { authClient } from "@/lib/auth-client"
 import { toast } from "@/components/ui/toast"
+
+type SignUpRole = "student" | "tutor"
 
 interface SignUpForm {
   fullName: string
   email: string
   password: string
   confirmPassword: string
+  role: SignUpRole
 }
 
 export default function SignUpPage() {
@@ -23,6 +26,7 @@ export default function SignUpPage() {
     email: "",
     password: "",
     confirmPassword: "",
+    role: "student",
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -31,6 +35,12 @@ export default function SignUpPage() {
 
   function handleChange(event: ChangeEvent<HTMLInputElement>) {
     const { name, value } = event.target
+    if (name === "role") {
+      const role: SignUpRole = value === "tutor" ? "tutor" : "student"
+      setForm((current) => ({ ...current, role }))
+      setError("")
+      return
+    }
     setForm((current) => ({ ...current, [name]: value }))
     setError("")
   }
@@ -54,11 +64,15 @@ export default function SignUpPage() {
 
     setIsLoading(true)
 
+    const role: SignUpRole = form.role === "tutor" ? "tutor" : "student"
     const { error: signUpError } = await authClient.signUp.email({
       name: form.fullName,
       email: form.email,
       password: form.password,
-    })
+      // Admin plugin blocks setting `role` directly (input:false). `signupAs`
+      // is a declared additional field; server hook validates and maps to role.
+      signupAs: role,
+    } as Parameters<typeof authClient.signUp.email>[0] & { signupAs: SignUpRole })
 
     setIsLoading(false)
 
@@ -145,6 +159,52 @@ export default function SignUpPage() {
               </div>
             </div>
 
+            <fieldset>
+              <legend className="block text-sm font-medium text-zinc-200">
+                I am signing up as
+              </legend>
+              <div className="mt-2 grid grid-cols-2 gap-3">
+                <label
+                  className={`flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 text-sm transition-all duration-200 focus-within:ring-2 focus-within:ring-[#FF2D83]/25 ${
+                    form.role === "student"
+                      ? "border-[#FF2D83]/60 bg-[#FF2D83]/10 text-white"
+                      : "border-white/10 bg-ink-950/60 text-zinc-300 hover:border-white/20"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="role"
+                    value="student"
+                    checked={form.role === "student"}
+                    onChange={handleChange}
+                    required
+                    className="sr-only"
+                  />
+                  <GraduationCap className="size-4 shrink-0 text-[#FF2D83]" aria-hidden />
+                  <span className="font-medium">Student</span>
+                </label>
+                <label
+                  className={`flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 text-sm transition-all duration-200 focus-within:ring-2 focus-within:ring-[#FF2D83]/25 ${
+                    form.role === "tutor"
+                      ? "border-[#FF2D83]/60 bg-[#FF2D83]/10 text-white"
+                      : "border-white/10 bg-ink-950/60 text-zinc-300 hover:border-white/20"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="role"
+                    value="tutor"
+                    checked={form.role === "tutor"}
+                    onChange={handleChange}
+                    required
+                    className="sr-only"
+                  />
+                  <BookOpen className="size-4 shrink-0 text-[#FF2D83]" aria-hidden />
+                  <span className="font-medium">Tutor</span>
+                </label>
+              </div>
+            </fieldset>
+
             <div>
               <label
                 htmlFor="password"
@@ -226,8 +286,8 @@ export default function SignUpPage() {
             </div>
 
             <p className="text-xs text-zinc-500">
-              New accounts are created as students by default. Admin access is
-              assigned by an existing administrator.
+              Select your account type. Admin access is assigned by an existing
+              administrator.
             </p>
 
             {error && (

@@ -31,6 +31,9 @@ async function requestToken(): Promise<TokenResult> {
 
     const token = response?.data?.token
     if (response?.error || typeof token !== "string" || !token) {
+      if (response?.error) {
+        console.warn("Better Auth JWT token retrieval failed:", response.error)
+      }
       return null
     }
 
@@ -40,7 +43,8 @@ async function requestToken(): Promise<TokenResult> {
       expiresAt: exp ? (exp - 30) * 1000 : Date.now() + 60_000,
     }
     return { token }
-  } catch {
+  } catch (error) {
+    console.warn("Better Auth JWT token retrieval threw:", error)
     return null
   }
 }
