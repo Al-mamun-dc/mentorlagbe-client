@@ -4,7 +4,7 @@ MentorLagbe is an online tutoring marketplace that connects students with tutors
 
 ## 🌐 Live Website
 
-**Live URL:** [Add Your Deployed Website URL Here]
+**Live URL:** https://mentorlagbe-client-gamma.vercel.app
 
 ---
 
@@ -12,8 +12,8 @@ MentorLagbe is an online tutoring marketplace that connects students with tutors
 
 Use the following credentials to access the Admin Dashboard:
 
-- **Admin Email:** `YOUR_ADMIN_EMAIL`
-- **Admin Password:** `YOUR_ADMIN_PASSWORD`
+- **Admin Email:** `mamun2@gmail.com`
+- **Admin Password:** `mamun2@M`
 
 > Note: Replace these placeholders with your assignment demo admin credentials. Never publish personal or production passwords.
 
@@ -146,7 +146,7 @@ MentorLagbe/
 ### 1. Clone the Repository
 
 ```bash
-git clone YOUR_GITHUB_REPOSITORY_URL
+git clone https://github.com/Al-mamun-dc/mentorlagbe-client.git
 ```
 
 ### 2. Frontend Setup
